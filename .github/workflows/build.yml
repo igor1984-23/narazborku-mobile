@@ -1,0 +1,75 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install web dependencies
+        working-directory: web
+        run: npm ci || npm install
+
+      - name: Build Next.js (static)
+        working-directory: web
+        env:
+          NEXT_PUBLIC_SITE_URL: 'https://narazborku.ru'
+        run: npx next build
+
+      - name: Copy web build to Capacitor www
+        run: |
+          rm -rf www
+          mkdir -p www
+          cp -r web/.next/static/. www/
+          cp -r web/public/. www/
+          # Copy server-rendered pages as static HTML
+          mkdir -p www/server/app
+          for f in web/.next/server/app/*.html; do
+            if [ -f "$f" ]; then
+              cp "$f" "www/server/app/$(basename $f)"
+            fi
+          done
+          # Fallback: copy the .next/server/app directory
+          if [ -d web/.next/server/app ]; then
+            cp -rn web/.next/server/app/. www/app/ 2>/dev/null || true
+          fi
+
+      - name: Install Capacitor
+        run: |
+          npm install --no-audit --no-fund @capacitor/cli @capacitor/core @capacitor/android
+          npx cap add android 2>&1 || echo "android platform may already exist"
+          npx cap sync android 2>&1
+
+      - name: Build APK (debug)
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon 2>&1 | tail -30
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: narazborku-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: warn
+          retention-days: 30
