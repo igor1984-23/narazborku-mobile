@@ -24,7 +24,16 @@ jobs:
           java-version: '17'
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
+        with:
+          api-level: '34'
+          build-tools-version: '34.0.0'
+          ndk-version: '26b'
+          packages: |
+            platform-tools
+            platforms;android-34
+            build-tools;34.0.0
+            ndk;26b
 
       - name: Install web dependencies
         working-directory: web
