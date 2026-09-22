@@ -4,12 +4,13 @@ const config = {
     appName: "НаРазборку",
     webDir: "out",
     server: {
-        androidScheme: "https"
+        url: "https://narazborku.ru",
+        androidScheme: "https",
+        cleartext: false
     },
     android: {
         allowMixedContent: false,
         captureInput: true
     }
 };
-
 module.exports = config;
