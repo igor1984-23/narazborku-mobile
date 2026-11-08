@@ -27,3 +27,8 @@ android/keystore.properties
 *.keystore
 *.jks
 keystore.properties
+
+# Firebase-конфиг содержит API-ключ проекта — генерируется через
+# Firebase API (projects/<id>/androidApps/<appId>/config) и лежит локально.
+# В git он не нужен: на CI push не собирается.
+android/app/google-services.json
