@@ -27,8 +27,15 @@ jobs:
       # для ЭМУЛЯТОРА, а для сборки APK не требуется, и на GitHub-hosted runner
       # он падал на «Setup Android SDK» (с 2026-09-21, все прогоны красные).
       # Для assembleRelease достаточно SDK + build-tools + platform.
+      #
+      # packages указан ЯВНО: дефолтный список setup-android содержит пакет
+      # "tools", которого больше нет в репозитории sdkmanager — из-за этого
+      # sdkmanager падал с «Warning: Failed to find package 'tools'».
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
+          accept-android-sdk-licenses: true
 
       - name: Install Capacitor
         run: |
