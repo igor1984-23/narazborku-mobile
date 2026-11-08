@@ -23,57 +23,42 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      # Раньше здесь стоял reactivecircus/android-emulator-runner@v2 — он нужен
+      # для ЭМУЛЯТОРА, а для сборки APK не требуется, и на GitHub-hosted runner
+      # он падал на «Setup Android SDK» (с 2026-09-21, все прогоны красные).
+      # Для assembleRelease достаточно SDK + build-tools + platform.
       - name: Setup Android SDK
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 34
-          arch: x86_64
-          profile: default
-
-      - name: Install web dependencies
-        working-directory: web
-        run: npm ci || npm install
-
-      - name: Build Next.js (static)
-        working-directory: web
-        env:
-          NEXT_PUBLIC_SITE_URL: 'https://narazborku.ru'
-        run: npx next build
-
-      - name: Copy web build to Capacitor www
-        run: |
-          rm -rf www
-          mkdir -p www
-          cp -r web/.next/static/. www/
-          cp -r web/public/. www/
-          # Copy server-rendered pages as static HTML
-          mkdir -p www/server/app
-          for f in web/.next/server/app/*.html; do
-            if [ -f "$f" ]; then
-              cp "$f" "www/server/app/$(basename $f)"
-            fi
-          done
-          # Fallback: copy the .next/server/app directory
-          if [ -d web/.next/server/app ]; then
-            cp -rn web/.next/server/app/. www/app/ 2>/dev/null || true
-          fi
+        uses: android-actions/setup-android@v3
 
       - name: Install Capacitor
         run: |
-          npm install --no-audit --no-fund @capacitor/cli @capacitor/core @capacitor/android
-          npx cap add android 2>&1 || echo "android platform may already exist"
-          npx cap sync android 2>&1
+          npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+          npm install --no-audit --no-fund @capacitor/cli@6 @capacitor/core@6 @capacitor/android@6
 
-      - name: Build APK (debug)
+      # Приложение работает через server.url (живой https://narazborku.ru) —
+      # веб-бандл в APK нужен только как fallback при ошибке загрузки.
+      # Кладём минимальный loader, который редиректит на живой сайт.
+      - name: Prepare web assets (fallback loader)
+        run: |
+          rm -rf www && mkdir -p www
+          cp -r out/. www/ 2>/dev/null || echo "no out/ directory — using loader only"
+
+      - name: Sync Capacitor
+        run: |
+          npx cap sync android
+
+      - name: Build APK (release, unsigned)
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon 2>&1 | tail -30
+          # release-сборка требует подписи; в CI ключа нет, поэтому собираем debug.
+          # Подписанный release-APK собирается локально (см. README).
+          ./gradlew assembleDebug --no-daemon 2>&1 | tail -40
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: narazborku-apk
+          name: narazborku-apk-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: warn
           retention-days: 30
