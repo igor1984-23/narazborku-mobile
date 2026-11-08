@@ -1,10 +1,28 @@
 node_modules/
 out/
-android/
 ios/
 .gradle/
 *.log
 .DS_Store
 build/
 *.apk
+*.aab
 .idea/
+
+# --- android/ теперь В git (источники нужны для пересборки APK) ---
+# Исключаем сгенерированное, локальное и секреты.
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/capacitor-cordova-android-plugins/
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json
+android/app/src/main/assets/capacitor.plugins.json
+android/app/src/main/res/xml/config.xml
+android/keystore.properties
+
+# Keystore и ключи — ТОЛЬКО локально, никогда в git
+*.keystore
+*.jks
+keystore.properties
