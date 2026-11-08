@@ -41,9 +41,14 @@ android {
     //   NARAZBORKU_STORE_PASSWORD=...
     //   NARAZBORKU_KEY_PASSWORD=...
     //   NARAZBORKU_KEY_ALIAS=narazborku
+    //
+    // Дефолтного пути к keystore НЕТ намеренно: жёстко зашитый Windows-путь
+    // («C:/Users/...») ломает сборку на Linux — Gradle падает с
+    // «Cannot convert URL 'C:/Users/...' to a file». Путь задаётся только
+    // через env или keystore.properties.
     signingConfigs {
         release {
-            storeFile file(signingValue("NARAZBORKU_KEYSTORE") ?: "C:/Users/iaraf/.android/release.keystore")
+            storeFile signingValue("NARAZBORKU_KEYSTORE") ? file(signingValue("NARAZBORKU_KEYSTORE")) : null
             storePassword signingValue("NARAZBORKU_STORE_PASSWORD") ?: ""
             keyAlias signingValue("NARAZBORKU_KEY_ALIAS") ?: "narazborku"
             keyPassword signingValue("NARAZBORKU_KEY_PASSWORD") ?: ""

@@ -54,12 +54,14 @@ jobs:
         run: |
           npx cap sync android
 
-      - name: Build APK (release, unsigned)
+      - name: Build APK (debug)
         run: |
           cd android
           chmod +x gradlew
           # release-сборка требует подписи; в CI ключа нет, поэтому собираем debug.
           # Подписанный release-APK собирается локально (см. README).
+          # pipefail обязателен: без него падение gradle теряется в пайпе | tail.
+          set -o pipefail
           ./gradlew assembleDebug --no-daemon 2>&1 | tail -40
 
       - name: Upload APK artifact
