@@ -1,0 +1,12 @@
+# Этот файл нужен только для того, чтобы каталог assets/ существовал в git.
+#
+# Capacitor на этапе `cap sync` пишет сюда:
+#   capacitor.config.json   — конфиг приложения (server.url и т.д.)
+#   capacitor.plugins.json  — список подключённых плагинов
+#   public/                 — веб-бандл (fallback, т.к. server.url = живой прод)
+#
+# Без этого каталога `cap sync` падает с:
+#   Error: ENOENT: no such file or directory,
+#   open '.../android/app/src/main/assets/capacitor.config.json'
+#
+# Сам каталог в .gitignore не попадает — игнорируются только файлы внутри.
