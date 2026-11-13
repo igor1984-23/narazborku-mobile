@@ -52,4 +52,8 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Android 13+ (API 33): без этого permission уведомления не показываются.
+         Плагин @capacitor/push-notifications запрашивает разрешение
+         в рантайме, но само объявление должно быть в манифесте. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 </manifest>
